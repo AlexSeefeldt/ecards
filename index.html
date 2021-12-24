@@ -1,35 +1,35 @@
 <head>
-    <meta charset="utf-8"/>
-    <style>
-        body {
-            height: 100vh;
-            width: 100vw;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        div#clickme {
-            font-size: 128px;
-            padding: 0.5em;
-            border: 1px solid black;
-            box-shadow:2px 2px #303030;
-            user-select: none;
-            cursor: pointer;
-        }
-        div#clickme.clicked {
-            color: #777777;
-            background-color: #eeeeee;
-            cursor: initial;
-        }
-    </style>
+  <meta charset="utf-8"/>
+  <style>
+    body {
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+    div#clickme {
+      font-size: 128px;
+      padding: 0.5em;
+      border: 1px solid black;
+      box-shadow:2px 2px #303030;
+      user-select: none;
+      cursor: pointer;
+    }
+    div#clickme.clicked {
+      color: #777777;
+      background-color: #eeeeee;
+      cursor: initial;
+    }
+  </style>
 </head>
 <body>
-    <div id="clickme">Click me</div>
-    <script>
-        document.querySelector('#clickme').addEventListener('click', (e) => {
-            e.currentTarget.classList.add('clicked');
-            e.currentTarget.innerHTML = 'You clicked';
-        })
-    </script>
+  <div id="clickme">Click me</div>
+  <script>
+    document.querySelector('#clickme').addEventListener('click', (e) => {
+      e.currentTarget.classList.add('clicked');
+      e.currentTarget.innerHTML = 'You clicked';
+    })
+  </script>
 </body>
