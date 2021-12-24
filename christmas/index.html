@@ -1,0 +1,135 @@
+<head>
+  <meta charset="utf-8"/>
+  <style>
+    body {
+      margin: 0;
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+    canvas {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    div#backdrop {
+      width: 100vw;
+      height: 100vh;
+      background-color: #172244;
+      position: absolute;
+      top: 0;
+      left: 0;
+    }
+    img#merry-christmas {
+      position: relative;
+      max-height: 95%;
+      max-width: 95%;
+      width: auto;
+      height: auto;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      animation-duration: 2s;
+      opacity: 0;
+      transform: translateX(5%);
+    }
+    img#merry-christmas.animate {
+      animation-name: slidein;
+      opacity: 1;
+    }
+    @keyframes slidein {
+      from {
+        transform: scale(0.5) translateY(-50%);
+        opacity: 0;
+      }
+      25% {
+        opacity: 0;
+      }
+      to {
+        opacity: 1;
+      }
+    }
+    @media screen and (max-width: 1664px) {
+      body {
+        justify-content: center;
+        align-items: flex-start;
+      }
+      img#merry-christmas {
+        transform: translateY(2.5%);
+      }
+    }
+  </style>
+  <script src='perlin.js'></script>
+  <script src='snowflakes.js'></script>
+  <script src='tree.js'></script>
+</head>
+<body>
+  <div id='backdrop'></div>
+  <img id='merry-christmas' src='merry_christmas.png' width=768 height=636>
+  <script>
+    const merry_christmas = document.querySelector('#merry-christmas');
+    function click_handler() {
+      merry_christmas.classList.add('animate');
+      document.removeEventListener('click', click_handler);
+    }
+    document.addEventListener('click', click_handler);
+  </script>
+  <script>
+    const dt = 17;
+
+    let previous = performance.now();
+    let accumulator = 0; // frame-by-frame spare time accumulator
+    let elapsed = 0; // total elapsed time in animation
+    // this runs every frame
+    function animate(timestamp) {
+      // track the frame length
+      const frame_time = timestamp - previous;
+      previous = timestamp;
+      // add it to the accumulator
+      accumulator += frame_time;
+      // run down the accumulator in dt sized chunks
+      while (accumulator >= dt) {
+        // run updates on each animation
+        animations.forEach(a => a.integrate(elapsed));
+        accumulator -= dt;
+        elapsed += dt;
+      }
+      // render each animation
+      animations.forEach(a => a.render());
+      window.requestAnimationFrame(animate);
+    }
+
+    console.info(animations);
+
+    animations.forEach(a => {
+      // give each animation a canvas
+      let canvas = document.createElement('canvas');
+      canvas.id = a.name;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const after = document.querySelector(a.after);
+      if (after) {
+        after.after(canvas);
+      } else {
+        document.querySelector('body').appendChild(canvas);
+      }
+      a.init(canvas);
+    });
+    // resize listener
+    window.addEventListener('resize', () => {
+      animations.forEach(a => {
+        // run the animation's state update for this
+        a.on_resize(window);
+        // resize its canvas
+        a.canvas().width = window.innerWidth;
+        a.canvas().height = window.innerHeight;
+      });
+    });
+    window.requestAnimationFrame(animate);
+  </script>
+</body>
