@@ -3,20 +3,21 @@
   if (!Array.isArray(global.animations)) {
     global.animations = [];
   }
-  const LIGHT_SIZE = 32;
-
+  const BLINK_CYCLE_STEPS = 4;
+  
   let animations = global.animations;
   let canvas;
   let state = [];
   let last_picked_color = 0;
   let color_count = 0;
   let is_dragging = false;
+  let light_size;
 
   function convert_coords(_x, _y) {
     // coords must be made relative to bottom-aligned, horizontally centered axes
     return {
-      x: (_x - 16) - (canvas.width / 2),
-      y: canvas.height - (_y - 16),
+      x: _x - (canvas.width / 2),
+      y: canvas.height - _y,
     }
   }
 
@@ -26,11 +27,10 @@
     canvas: () => canvas,
     init: (_canvas) => {
       canvas = _canvas;
-
-      canvas.tree = load_image('tree.png');
-
+      canvas.tree = load_image('tree.webp');
       canvas.lights = load_image('lights.png', () => {
-        color_count = canvas.lights.height / LIGHT_SIZE;
+        light_size = canvas.lights.width;
+        color_count = canvas.lights.height / light_size;
       });
 
       canvas.addEventListener('mousedown', e => {
@@ -38,8 +38,8 @@
           
         if (state.length > 0) {
           const latest_light = state[state.length - 1];
-          if (Math.abs(x - latest_light.x) < 16
-           && Math.abs(y - latest_light.y) < 16) {
+          if (Math.abs(x - latest_light.x) < light_size / 2
+           && Math.abs(y - latest_light.y) < light_size / 2) {
             is_dragging = true;
             return;
           }
@@ -50,7 +50,7 @@
           // [0,1]
           bright: 0,
           // [0,1) representing displacement in sine cycle
-          cycle: e.timeStamp % 4 / 4,
+          cycle: e.timeStamp % BLINK_CYCLE_STEPS / BLINK_CYCLE_STEPS,
           // an index into the possible colors in lights.png
           color: last_picked_color,
         });
@@ -84,9 +84,9 @@
         }
       });
     },
-    on_resize: (window) => {},
+    on_resize: (width, height) => {},
     integrate: (elapsed) => {
-      state.forEach(l => l.bright = (Math.sin((elapsed / 512) + (l.cycle * 2 * Math.PI)) + 1) / 2);
+      state.forEach(l => l.bright = (Math.sin((elapsed / 512) + (l.cycle * 2 * Math.PI)) + 1) / 8 + 0.75);
     },
     render: () => {
       const context = canvas.getContext('2d');
@@ -94,9 +94,28 @@
       context.drawImage(canvas.tree, (canvas.width - canvas.tree.width) / 2, canvas.height - canvas.tree.height);
       state.forEach(l => {
         context.globalAlpha = l.bright;
-        context.drawImage(canvas.lights, 0, l.color * LIGHT_SIZE, LIGHT_SIZE, LIGHT_SIZE, (canvas.width / 2) + l.x, canvas.height - l.y, LIGHT_SIZE, LIGHT_SIZE);
+        context.drawImage(
+          canvas.lights,
+          0,
+          l.color * light_size,
+          light_size, light_size,
+          (canvas.width / 2) + l.x - (light_size / 2),
+          canvas.height - l.y - (light_size / 2),
+          light_size,
+          light_size
+        );
       });
       context.globalAlpha = 1;
     },
   });
+
+  global.get_light_data = () => {
+    // set bright values to zero for the data
+    const serialized_state = JSON.stringify(state.map(s => ({ ...s, bright: 0 })), undefined, 2);
+
+    const link = document.createElement('a');
+    link.setAttribute('href', 'data:text/javascript,' + encodeURIComponent(`const light_data = ${serialized_state}`));
+    link.setAttribute('download', 'light_data.js');
+    link.click();
+  }
 })(this);

@@ -1,17 +1,19 @@
 <head>
-  <meta charset="utf-8"/>
-  <meta name="theme-color" content="#172244" >
+  <meta charset='utf-8'/>
+  <meta name="viewport" content="user-scalable=no">
+  <meta name='theme-color' content='#172244'>
+  <link href='https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap' rel='stylesheet'> 
   <style>
     html {
       background-color: #071722;
-      height: -webkit-fill-available;
+      height: 100vh;
     }
     body {
       margin: 0;
       position: relative;
       width: 100vw;
-      height: 100vh;
-      height: -webkit-fill-available;
+      height: 100%;
+      height: calc(var(--vh, 1%) * 100);
       overflow: hidden;
       display: flex;
       align-items: center;
@@ -27,7 +29,7 @@
     div#backdrop {
       width: 100%;
       height: 100%;
-      background-color: #172244;
+      background: #172244;
       position: absolute;
       top: 0;
       left: 0;
@@ -43,13 +45,33 @@
       animation-duration: 2s;
       opacity: 0;
       transform: translateX(5%);
-      /* image-rendering: pixelated; */
+      pointer-events: none;
+      filter: drop-shadow(0 0 32px #172244);
     }
     img#merry-christmas.animate {
-      animation-name: slidein;
+      animation-name: merry-christmas;
       opacity: 1;
     }
-    @keyframes slidein {
+    div#prompt {
+      position: absolute;
+      left: 50%;
+      transform: translateX(-50%);
+      pointer-events: none;
+      user-select: none;
+      animation-name: prompt;
+      animation-duration: 1.5s;
+      animation-delay: 4s;
+      animation-fill-mode: both;
+      
+      font-size: 40px;
+      font-family: 'Dancing Script', serif;
+      padding: 0.3em;
+      background-color: #172244;
+      color: #F0C432;
+      border: 2px ridge #DDEEFF;
+      white-space: nowrap;
+    }
+    @keyframes merry-christmas {
       from {
         transform: scale(0.5) translateY(-50%);
         opacity: 0;
@@ -58,6 +80,16 @@
         opacity: 0;
       }
       to {
+        opacity: 1;
+      }
+    }
+    @keyframes prompt {
+      from {
+        bottom: 0;
+        opacity: 0;
+      }
+      to {
+        bottom: 0.75em;
         opacity: 1;
       }
     }
@@ -70,6 +102,25 @@
         transform: translateY(2.5%);
       }
     }
+    @media screen and (min-resolution: 1.5dppx) {
+      div#prompt {
+        font-size: 10vw;
+      }
+      canvas#tree {
+        transform: scale(1.25);
+        transform-origin: bottom center;
+      }
+    }
+    div#debug {
+      position: fixed;
+      top: 0;
+      width: 100vw;
+      height: fit-content;
+      background-color: #071722;
+      color: #DDEEFF;
+      font-size: 24px;
+      font-family: 'Courier New', Courier, monospace;
+    }
   </style>
   <script src='perlin.js'></script>
   <script src='load_image.js'></script>
@@ -79,14 +130,23 @@
 </head>
 <body>
   <div id='backdrop'></div>
-  <img id='merry-christmas' src='merry_christmas.png' width=768 height=636>
+  <img id='merry-christmas' src='merry_christmas.webp' width=768 height=636>
+  <div id='prompt'>click the screen</div>
+  <!-- <audio id='music' loop><source src='christmas-song.wav' type='audio/wav'></audio> -->
+  <div id='debug'></div>
   <script>
-    window.setTimeout(() => {
+    function click_handler() {
+      document.querySelector('#prompt').remove();
       document.querySelector('#merry-christmas').classList.add('animate');
-    }, 3500);
+      // document.querySelector('#music').play();
+      window.removeEventListener('click', click_handler);
+    }
+    window.addEventListener('click', click_handler);
   </script>
   <script>
     const dt = 17;
+    const body = document.querySelector('body');
+    const debug = document.querySelector('#debug');
 
     let previous = performance.now();
     let accumulator = 0; // frame-by-frame spare time accumulator
@@ -129,19 +189,29 @@
       a.init(canvas);
     });
 
-    const resize_callback = () => {
+    const resize_handler = () => {
       animations.forEach(a => {
+        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+        const new_width = window.innerWidth;
+        const new_height = window.innerHeight;
+        body.style.height = new_height;
         // run the animation's state update for this
-        a.on_resize(window);
+        a.on_resize(new_width, new_height);
         // resize its canvas
-        a.canvas().width = window.innerWidth;
-        a.canvas().height = window.innerHeight;
-      });
+        a.canvas().width = new_width;
+        a.canvas().height = new_height;
+//         debug.innerHTML = `vh: ${document.documentElement.style.getPropertyValue('--vh')}<br/>
+// body: [w: ${body.clientWidth}, h:${body.clientHeight}]<br/>
+// window: [w: ${window.innerWidth}, h:${window.innerHeight}]<br/>
+// canvases: [w: ${a.canvas().clientWidth}, h:${a.canvas().clientHeight}]`;
+        });
     };
 
-    // resize listener
-    window.addEventListener('resize', resize_callback);
-    window.addEventListener('orientationchange', resize_callback);
+    document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+    window.addEventListener('resize', resize_handler);
+    window.addEventListener('scroll', resize_handler);
+    window.addEventListener('click', resize_handler);
+    window.addEventListener('orientationchange', resize_handler);
 
     window.requestAnimationFrame(animate);
   </script>

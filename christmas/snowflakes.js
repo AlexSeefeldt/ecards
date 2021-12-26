@@ -33,11 +33,11 @@
       snowflake_context.closePath();
       snowflake_context.fill();
     },
-    on_resize: (window) => {
+    on_resize: (width, height) => {
       state = state.map(s => ({
         dx: s.dx,
-        x: s.x / canvas.width * window.innerWidth,
-        y: s.y / canvas.height * window.innerHeight,
+        x: s.x / canvas.width * width,
+        y: s.y / canvas.height * height,
       }));
     },
     integrate: (elapsed) => {

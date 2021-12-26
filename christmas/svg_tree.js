@@ -20,9 +20,9 @@
       canvas = _canvas;
       paths = create_paths(canvas.width / 2, canvas.height, 20);
     },
-    on_resize: (window) => {
+    on_resize: (width, height) => {
       rendered = false;
-      paths = create_paths(window.innerWidth / 2, window.innerHeight, 20);
+      paths = create_paths(width / 2, height, 20);
     },
     integrate: (elapsed) => {},
     render: () => {
