@@ -1,4 +1,4 @@
-// TREE LIGHTS
+// svg_tree
 (function(global){
   if (!Array.isArray(global.animations)) {
     global.animations = [];

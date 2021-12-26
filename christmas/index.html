@@ -1,26 +1,32 @@
 <head>
   <meta charset="utf-8"/>
+  <meta name="theme-color" content="#172244" >
   <style>
+    html {
+      background-color: #071722;
+      height: -webkit-fill-available;
+    }
     body {
       margin: 0;
       position: relative;
       width: 100vw;
       height: 100vh;
+      height: -webkit-fill-available;
       overflow: hidden;
       display: flex;
       align-items: center;
       justify-content: flex-start;
     }
     canvas {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       position: absolute;
       top: 0;
       left: 0;
     }
     div#backdrop {
-      width: 100vw;
-      height: 100vh;
+      width: 100%;
+      height: 100%;
       background-color: #172244;
       position: absolute;
       top: 0;
@@ -37,6 +43,7 @@
       animation-duration: 2s;
       opacity: 0;
       transform: translateX(5%);
+      /* image-rendering: pixelated; */
     }
     img#merry-christmas.animate {
       animation-name: slidein;
@@ -65,19 +72,18 @@
     }
   </style>
   <script src='perlin.js'></script>
+  <script src='load_image.js'></script>
   <script src='snowflakes.js'></script>
+  <script src='light_data.js'></script>
   <script src='tree.js'></script>
 </head>
 <body>
   <div id='backdrop'></div>
   <img id='merry-christmas' src='merry_christmas.png' width=768 height=636>
   <script>
-    const merry_christmas = document.querySelector('#merry-christmas');
-    function click_handler() {
-      merry_christmas.classList.add('animate');
-      document.removeEventListener('click', click_handler);
-    }
-    document.addEventListener('click', click_handler);
+    window.setTimeout(() => {
+      document.querySelector('#merry-christmas').classList.add('animate');
+    }, 3500);
   </script>
   <script>
     const dt = 17;
@@ -92,8 +98,12 @@
       previous = timestamp;
       // add it to the accumulator
       accumulator += frame_time;
+      // if there's more than 8 frames to process, just drop them
+      if (accumulator > dt * 8) {
+        accumulator = 0;
+      }
       // run down the accumulator in dt sized chunks
-      while (accumulator >= dt) {
+      while (accumulator >= 0) {
         // run updates on each animation
         animations.forEach(a => a.integrate(elapsed));
         accumulator -= dt;
@@ -103,8 +113,6 @@
       animations.forEach(a => a.render());
       window.requestAnimationFrame(animate);
     }
-
-    console.info(animations);
 
     animations.forEach(a => {
       // give each animation a canvas
@@ -120,8 +128,8 @@
       }
       a.init(canvas);
     });
-    // resize listener
-    window.addEventListener('resize', () => {
+
+    const resize_callback = () => {
       animations.forEach(a => {
         // run the animation's state update for this
         a.on_resize(window);
@@ -129,7 +137,12 @@
         a.canvas().width = window.innerWidth;
         a.canvas().height = window.innerHeight;
       });
-    });
+    };
+
+    // resize listener
+    window.addEventListener('resize', resize_callback);
+    window.addEventListener('orientationchange', resize_callback);
+
     window.requestAnimationFrame(animate);
   </script>
 </body>
