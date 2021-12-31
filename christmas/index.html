@@ -40,7 +40,7 @@
     }
     img#merry-christmas {
       position: relative;
-      max-height: 95%;
+      max-height: calc(100% - 184px);
       max-width: 95%;
       width: auto;
       height: auto;
@@ -159,16 +159,6 @@
         transform-origin: bottom center;
       }
     }
-    div#debug {
-      position: fixed;
-      top: 0;
-      width: 100vw;
-      height: fit-content;
-      background-color: #071722;
-      color: #DDEEFF;
-      font-size: 24px;
-      font-family: 'Courier New', Courier, monospace;
-    }
   </style>
   <script type='module' src='js/snow.js'></script>
   <script type='module' src='js/tree.js'></script>
@@ -188,9 +178,9 @@
     </a>
   </nav>
   <audio id='music' loop><source src='audio/seerp-009.wav' type='audio/wav'></audio>
-  <div id='debug'></div>
   <script type='module'>
     // UI code
+    // selectors for the various HTML elements used
     const music = document.querySelector('#music');
     const play_option = document.querySelector('#play-option');
     const play = play_option.querySelector('.play');
@@ -199,51 +189,108 @@
     
     const nav = document.querySelector('nav');
     const merry_christmas = document.querySelector('#merry-christmas');
+
+    const HIDE_NAV_TIMEOUT = 4096;
     
+    // mutable states
     let playing = false;
+    let mouseover_blocked = false;
+    let hiding_blocked = false;
     let timeout_id;
 
+    // when the play/pause option is clicked
     play_option.addEventListener('click', () => {
+      // stop hiding the nav if it's hiding
       nav.classList.remove('hide', 'slow');
+
       playing = !playing;
       if (playing) {
         music.play();
-        pause.classList.remove('hide');
-        play.classList.add('hide');
-        play_option_label.innerText = 'Pause song';
       } else {
         music.pause();
-        play.classList.remove('hide');
-        pause.classList.add('hide');
-        play_option_label.innerText = 'Play song';
       }
 
+      // restart the timeout to hide the nav
       if (timeout_id) {
         window.clearTimeout(timeout_id);
       }
-      timeout_id = window.setTimeout(hide_nav, 5000);
+      timeout_id = window.setTimeout(hide_nav, HIDE_NAV_TIMEOUT);
     });
 
+    // if music is played (either from the nav button or from an external action)
+    music.addEventListener('play', () => {
+      playing = true;
+      // show the correct icon and update text
+      pause.classList.remove('hide');
+      play.classList.add('hide');
+      play_option_label.innerText = 'Pause song';
+    });
+
+    // if music is paused (either from the nav button or from an external action)
+    music.addEventListener('pause', () => {
+      playing = false;
+      // show the correct icon and update text
+      play.classList.remove('hide');
+      pause.classList.add('hide');
+      play_option_label.innerText = 'Play song';
+    });
+
+    // used in timeout
     function hide_nav() {
       nav.classList.add('hide', 'slow');
     }
 
+    // mouse is in last 10th of screen, according to active layout (cf. the css)
+    function is_in_hot_zone({ x, y }) {
+      return document.body.clientWidth > 1664
+        ? x > document.body.clientWidth * 0.9
+        : y > document.body.clientHeight * 0.9;
+    }
+
+    // on a window click, toggle the visibility of the nav
     window.addEventListener('click', e => {
+      // if it's a click on the nav, or the nav has not appeared for the first time (triggered automatically after page load) and been clicked
       if (nav.contains(e.target) || !timeout_id) {
         return;
       }
 
+      // reset the nav hiding timeout
       window.clearTimeout(timeout_id);
       if (nav.classList.contains('hide')) {
+        // if the nav is hidden, unhide it and restart the timeout
         nav.classList.remove('hide', 'slow');
-        timeout_id = window.setTimeout(hide_nav, 5000);
-      } else {
+        timeout_id = window.setTimeout(hide_nav, HIDE_NAV_TIMEOUT);
+      } else if (!hiding_blocked) {
+        // otherwise, hide it, and block mouseover activation of the nav (until it exits the hot zone, cf. mousemove handler)
         nav.classList.add('hide');
+        if (is_in_hot_zone(e)) {
+          mouseover_blocked = true;
+        }
       }
     });
 
-    window.setTimeout(() => merry_christmas.classList.add('animate'), 1500);
-    window.setTimeout(() => nav.classList.remove('hide'), 3000);
+    // mouse entering the last 10th of the screen activates the nav
+    window.addEventListener('mousemove', e => {
+      if (is_in_hot_zone(e)) {
+        // cannot be activated if mouseover is blocked or the nav has not appeared for the first time and been clicked
+        if (!mouseover_blocked && timeout_id) {
+          // timeout to hide has to be reset too
+          window.clearTimeout(timeout_id);
+          nav.classList.remove('hide', 'slow');
+          timeout_id = window.setTimeout(hide_nav, HIDE_NAV_TIMEOUT);
+          // block nav dismissal until it's fully entered
+          hiding_blocked = true;
+          window.setTimeout(() => hiding_blocked = false, 800);
+        }
+      } else {
+        // if mouse is no longer in the hot zone, unblock mouseover activation
+        mouseover_blocked = false;
+      }
+    });
+
+    // pop up "merry christmas" and the nav
+    window.setTimeout(() => merry_christmas.classList.add('animate'), 1536);
+    window.setTimeout(() => nav.classList.remove('hide'), 3072);
   </script>
   <script type='module'>
     // animation code
@@ -288,21 +335,26 @@
       canvas.id = a.name;
       canvas.width = window.innerWidth;
       canvas.height = window.innerHeight;
+      // place each animation canvas after the element it asks to be placed after
       const after = document.querySelector(a.after);
       if (after) {
         after.after(canvas);
       } else {
         document.querySelector('body').appendChild(canvas);
       }
+      // run init routine for animation with new canvas
       a.init(canvas);
     });
 
     const resize_handler = () => {
+      // update the viewport height percent unit (thanks CSS Tricks)
+      document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
+      // get new size from window
+      const new_width = window.innerWidth;
+      const new_height = window.innerHeight;
+      // update body style to match window
+      body.style.height = new_height;
       animations.forEach(a => {
-        document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
-        const new_width = window.innerWidth;
-        const new_height = window.innerHeight;
-        body.style.height = new_height;
         // run the animation's state update for this
         a.on_resize(new_width, new_height);
         // resize its canvas
@@ -314,7 +366,6 @@
     document.documentElement.style.setProperty('--vh', `${window.innerHeight * 0.01}px`);
     window.addEventListener('resize', resize_handler);
     window.addEventListener('scroll', resize_handler);
-    window.addEventListener('click', resize_handler);
     window.addEventListener('orientationchange', resize_handler);
 
     window.requestAnimationFrame(animate);
