@@ -11,6 +11,7 @@
     html {
       background-color: #071722;
       height: 100vh;
+      font-size: 1.25em;
     }
     body {
       margin: 0;
@@ -40,7 +41,7 @@
     }
     img#merry-christmas {
       position: relative;
-      max-height: calc(100% - 184px);
+      max-height: calc(100% - 11.7em);
       max-width: 95%;
       width: auto;
       height: auto;
@@ -50,7 +51,7 @@
       opacity: 0;
       transform: translateX(5%);
       pointer-events: none;
-      filter: drop-shadow(0 0 32px #172244);
+      filter: drop-shadow(0 0 32em #172244);
     }
     img#merry-christmas.animate {
       animation-name: merry-christmas;
@@ -66,7 +67,7 @@
       align-items: center;
       background-image: linear-gradient(to right, #071722, #172244 50%, #172244AA);
       color: #DDEEFF;
-      font-size: 2em;
+      font-size: 1.6em;
       width: 6.2em;
       font-family: Texturina;
       padding: 0.25em 2.5em 0.25em 0.5em;
@@ -134,7 +135,7 @@
         opacity: 1;
       }
     }
-    @media screen and (max-width: 1664px) {
+    @media only screen and (max-width: 1664px) {
       body {
         flex-direction: column;
       }
@@ -150,13 +151,15 @@
         transform: translateY(100%);
       }
     }
-    @media screen and (min-resolution: 1.5dppx) {
-      nav {
-        font-size: 10vw;
-      }
+    @media only screen and (min-resolution: 1.24dppx) {
       canvas#tree {
         transform: scale(1.25);
         transform-origin: bottom center;
+      }
+    }
+    @media only screen and (max-aspect-ratio: 5/8) {
+      nav {
+        font-size: 8.5vmin;
       }
     }
   </style>
@@ -176,8 +179,12 @@
       <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon read'><path d='M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z'></path><polyline points='14 2 14 8 20 8'></polyline><line x1='16' y1='13' x2='8' y2='13'></line><line x1='16' y1='17' x2='8' y2='17'></line><polyline points='10 9 9 9 8 9'></polyline></svg>
       <label>Read letter</label>
     </a>
+    <a class='option' id='photo-option' href='./photos'>
+      <svg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' class='icon image'><rect x='3' y='3' width='18' height='18' rx='2' ry='2'></rect><circle cx='8.5' cy='8.5' r='1.5'></circle><polyline points='21 15 16 10 5 21'></polyline></svg>
+      <label>See photos</label>
+    </a>
   </nav>
-  <audio id='music' loop><source src='audio/seerp-009.wav' type='audio/wav'></audio>
+  <audio id='music' loop><source src='audio/holy_lowly_roly-poly.mp3' type='audio/wav' preload='auto'></audio>
   <script type='module'>
     // UI code
     // selectors for the various HTML elements used
@@ -289,8 +296,8 @@
     });
 
     // pop up "merry christmas" and the nav
-    window.setTimeout(() => merry_christmas.classList.add('animate'), 1536);
-    window.setTimeout(() => nav.classList.remove('hide'), 3072);
+    window.setTimeout(() => merry_christmas.classList.add('animate'), 512);
+    window.setTimeout(() => nav.classList.remove('hide'), 2048);
   </script>
   <script type='module'>
     // animation code
